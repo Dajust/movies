@@ -66,7 +66,7 @@ const Chat = ({ goBack, selectedMovie }) => {
         top: 0;
         width: 100%;
         height: 100%;
-        overflow-y: auto;
+        overflow: hidden;
         z-index: 2;
         padding: 0;
         border-radius: 3px;
@@ -121,22 +121,24 @@ const Chat = ({ goBack, selectedMovie }) => {
           {selectedMovie.title}
         </span>
       </header>
-      <section>
-        {isLoading && (
-          <div
-            css={`
-              font-size: 14px;
-              font-style: italic;
-              text-align: center;
-              padding: 15px;
-            `}
-          >
-            Loading...
-          </div>
-        )}
+
+      {isLoading ? (
+        <div
+          css={`
+            font-size: 14px;
+            font-style: italic;
+            text-align: center;
+            padding: 15px;
+          `}
+        >
+          Loading...
+        </div>
+      ) : (
         <ul
           css={`
             padding: 15px;
+            height: calc(100% - 110px);
+            overflow-y: auto;
           `}
         >
           {messageList.map((message, i) => (
@@ -156,7 +158,7 @@ const Chat = ({ goBack, selectedMovie }) => {
             </li>
           ))}
         </ul>
-      </section>
+      )}
 
       <footer
         css={`
