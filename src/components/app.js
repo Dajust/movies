@@ -1,13 +1,19 @@
+// node_modules
 import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'react-emotion';
 
+// app_modules
 import movies from '../data/movies.json';
+import Chat from './chat';
+
+//assign id to all movies
+movies.forEach((m, index) => (m.id = `movie_${index}`));
 
 const Row = styled('ul')`
   display: flex;
   text-align: left;
-  padding: 0 10px;
   font-size: 14px;
+  cursor: pointer;
   li {
     flex: 100%;
     padding: 16px 0;
@@ -23,23 +29,54 @@ const Row = styled('ul')`
     }
   }
 
-  &:first-child {
-    font-size: 15px;
-    font-weight: bold;
-    > li {
-      18px 0;
-    }
-  }
-
   &:nth-child(2n + 2) {
     background-color: #242e39;
   }
+
+  &:first-child {
+    font-size: 15px;
+    font-weight: bold;
+    pointer-events: <no></no>ne;
+    > li {
+      padding: 18px 0;
+    }
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  transition: background-color 0.25s ease-in-out;
 `;
 
 const App = () => {
   const [filterText, setFilterText] = useState('');
+  const [sortBy, setSortBy] = useState('all');
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
   useEffect(() => {}, []);
+
+  function sorter(a, b) {
+    if (/year|rating/.test(sortBy)) {
+      return b[sortBy] - a[sortBy]; // newest/highest rating first
+    }
+
+    if (sortBy == 'title') {
+      let A = a.title.toUpperCase();
+      let B = b.title.toUpperCase();
+
+      if (A < B) {
+        return -1;
+      }
+
+      if (A > B) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    }
+  }
 
   const onChangeFilterText = useCallback(e => {
     setFilterText(e.target.value);
@@ -52,31 +89,46 @@ const App = () => {
         width: 100%;
         max-width: 850px;
         height: 500px;
-        overflow-y: scroll;
-        background: #2c3845;
-      `}
-    >
-      <header
-        css={`
+        border-radius: 3px;
+        overflow: hidden;
+        overflow-y: ${selectedMovie ? 'hidden' : 'auto'};
+        background-color: #2c3845;
+        box-shadow: 1px 5px 10px 2px rgba(0, 0, 0, 0.45);
+        position: relative;
+        header {
           position: sticky;
           top: 0;
           background-color: #202932;
-          padding-bottom: 10px;
-        `}
-      >
-        <Row>
-          <li>Title</li>
-          <li>Year</li>
-          <li>Runtime</li>
-          <li>Revenue</li>
-          <li>Rating</li>
-          <li>Genre</li>
-        </Row>
-        <div
-          css={`
+        }
+        > * {
+          padding: 0 12px;
+        }
+      `}
+    >
+      {selectedMovie ? (
+        <Chat
+          goBack={() => setSelectedMovie(null)}
+          selectedMovie={selectedMovie}
+        ></Chat>
+      ) : (
+        <>
+          <header
+            css={`
+              padding-bottom: 10px;
+            `}
+          >
+            <Row>
+              <li>Title</li>
+              <li>Year</li>
+              <li>Runtime</li>
+              <li>Revenue</li>
+              <li>Rating</li>
+              <li>Genre</li>
+            </Row>
+            <div
+              css={`
             display: flex;
             justify-content: space-between;
-            padding: 10px 10px 0;
 
             input,
             select {
@@ -95,37 +147,39 @@ const App = () => {
               padding: 15px; 10px;
             }
           `}
-        >
-          <input
-            type="text"
-            onChange={onChangeFilterText}
-            value={filterText}
-            placeholder="filter by title"
-            css={''}
-          />
-          <select>
-            <option selected value="all">
-              All
-            </option>
-            <option value="title">Title</option>
-            <option value="rating">Rating</option>
-            <option value="year">Year</option>
-          </select>
-        </div>
-      </header>
-
-      {movies
-        .filter(m => m.title.toLowerCase().includes(filterText.toLowerCase()))
-        .map(m => (
-          <Row key={m.description}>
-            <li>{m.title}</li>
-            <li>{m.year}</li>
-            <li>{m.runtime} mins</li>
-            <li>{m.revenue && `$${m.revenue}M`}</li>
-            <li>{m.rating}</li>
-            <li>{m.genre.join(' ').replace(/\s/g, ', ')}</li>
-          </Row>
-        ))}
+            >
+              <input
+                type="text"
+                onChange={onChangeFilterText}
+                value={filterText}
+                placeholder="filter by title"
+                css={''}
+              />
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                <option value="all">All</option>
+                <option value="title">Title</option>
+                <option value="rating">Rating</option>
+                <option value="year">Year</option>
+              </select>
+            </div>
+          </header>
+          {movies
+            .filter(m =>
+              m.title.toLowerCase().includes(filterText.toLowerCase())
+            )
+            .sort(sorter)
+            .map(m => (
+              <Row key={m.id} onClick={() => setSelectedMovie(m)}>
+                <li>{m.title}</li>
+                <li>{m.year}</li>
+                <li>{m.runtime} mins</li>
+                <li>{m.revenue && `$${m.revenue}M`}</li>
+                <li>{m.rating}</li>
+                <li>{m.genre.join(' ').replace(/\s/g, ', ')}</li>
+              </Row>
+            ))}
+        </>
+      )}
     </main>
   );
 };
