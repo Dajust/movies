@@ -6,7 +6,7 @@ import styled from 'react-emotion';
 import movies from '../data/movies.json';
 import Chat from './chat';
 
-//assign id to all movies
+// movies need unique ids for chat to function well
 movies.forEach((m, index) => (m.id = `movie_${index}`));
 
 const Row = styled('ul')`
